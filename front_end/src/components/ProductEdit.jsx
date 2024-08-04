@@ -1,19 +1,40 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-const CreateProduct = () => {
+const ProductEdit = () => {
+  const [product, setProduct] = useState({});
   const [selectedImages, setSelectedImages] = useState([]);
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/products/${id}`
+        );
+        setProduct(response.data);
+        setSelectedImages(
+          response.data.images.map(
+            (image) => `http://127.0.0.1:8000/storage/${image.path}`
+          )
+        );
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   const imageHandleChange = (e) => {
     if (e.target.files) {
       const fileArr = Array.from(e.target.files).map((file) =>
         URL.createObjectURL(file)
       );
-
       setSelectedImages(fileArr);
     }
   };
@@ -22,7 +43,7 @@ const CreateProduct = () => {
     return source.map((photo) => {
       return (
         <div className="col-md-3" key={photo}>
-          <img src={photo} key={photo} className="w-100" />
+          <img src={photo} alt="Product" className="w-100" />
         </div>
       );
     });
@@ -31,18 +52,39 @@ const CreateProduct = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm();
 
+  useEffect(() => {
+    if (product) {
+      setValue("name", product.name);
+      setValue("description", product.description);
+      setValue("category", product.category);
+    }
+  }, [product, setValue]);
+
   const formSubmit = async (data) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description);
+    formData.append("category", data.category);
+    formData.append("_method", "PUT");
+    
+    if (data.images && data.images.length > 0) {
+      Array.from(data.images).forEach((file, index) => {
+        formData.append(`images[${index}]`, file);
+      });
+    }
+
     await axios
-      .post("http://127.0.0.1:8000/api/products", data, {
+      .post(`http://127.0.0.1:8000/api/products/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
       .then((res) => {
-        toast.success("Product successfully added!");
+        toast.success("Product successfully updated!");
         navigate("/");
       })
       .catch((res) => {
@@ -55,7 +97,7 @@ const CreateProduct = () => {
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between">
-        <h4>Create product</h4>
+        <h4>Edit product</h4>
         <Link to="/" className="btn btn-dark">
           Back
         </Link>
@@ -123,7 +165,7 @@ const CreateProduct = () => {
                 cols={3}
               ></textarea>
             </div>
-            <button className="btn btn-dark float-end mb-4">Submit</button>
+            <button className="btn btn-dark float-end mb-4">Update</button>
           </div>
         </form>
       </div>
@@ -131,4 +173,4 @@ const CreateProduct = () => {
   );
 };
 
-export default CreateProduct;
+export default ProductEdit;

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { ProductCard } from "./ProductCard";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import Swal from "sweetalert2";
+
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -38,6 +40,34 @@ const Products = () => {
     e.preventDefault();
     fetchProducts(1, searchQuery); // Fetch products with the search query, reset to first page
   };
+
+  const deleteProduct = async (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#000",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`http://127.0.0.1:8000/api/products/${id}`);
+          Swal.fire("Deleted!", "Your product has been deleted.", "success");
+          fetchProducts();
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          Swal.fire(
+            "Error!",
+            "There was an error deleting the product.",
+            "error"
+          );
+        }
+      }
+    });
+  };
+
   return (
     <div className="container mt-5">
       <div className="row g-2 justify-content-between aling-items-center">
@@ -58,7 +88,7 @@ const Products = () => {
             <Link to="/create" className="btn btn-dark">
               Create
             </Link>
-            <Link to="" className="btn btn-dark">
+            <Link to="/bulk-create" className="btn btn-dark">
               Bulk Create
             </Link>
           </div>
@@ -75,7 +105,7 @@ const Products = () => {
             ) : (
               <>
                 {products.map((product) => (
-                  <ProductCard key={product.id} data={product} />
+                  <ProductCard key={product.id} data={product} onDelete={deleteProduct} />
                 ))}
                 <div className="col-12 d-flex justify-content-center gap-5 aling-items-center mt-3">
                   <button

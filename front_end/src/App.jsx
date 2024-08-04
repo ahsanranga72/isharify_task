@@ -7,6 +7,8 @@ import CreateProduct from "./components/CreateProduct";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProductDetails from "./components/ProductDetails";
+import ProductEdit from "./components/ProductEdit";
+import ProductBulkCreate from "./components/ProductBulkCreate";
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
         <Route path="/" element={<Products />} />
         <Route path="/create" element={<CreateProduct />} />
         <Route path="/details/:id" element={<ProductDetails />} />
+        <Route path="/edit/:id" element={<ProductEdit />} />
+        <Route path="/bulk-create" element={<ProductBulkCreate />} />
       </Routes>
       <div className="py-5"></div>
       <ToastContainer />
