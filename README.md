@@ -19,7 +19,7 @@
 1. **Navigate to the back_end directory:**
 
    ```sh
-   cd backend
+   cd back_end
    ```
 
 2. **Install PHP dependencies:**
