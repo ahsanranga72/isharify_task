@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { Link, useNavigate } from "react-router-dom";
 
 const CreateProduct = () => {
   const [selectedImages, setSelectedImages] = useState([]);
+  const navigate = useNavigate();
 
   const imageHandleChange = (e) => {
     if (e.target.files) {
@@ -17,7 +21,7 @@ const CreateProduct = () => {
   const renderPhotos = (source) => {
     return source.map((photo) => {
       return (
-        <div className="col-md-3">
+        <div className="col-md-3" key={photo}>
           <img src={photo} key={photo} className="w-100" />
         </div>
       );
@@ -30,17 +34,31 @@ const CreateProduct = () => {
     formState: { errors },
   } = useForm();
 
-  const formSubmit = (data) => {
-    console.log(data);
+  const formSubmit = async (data) => {
+    await axios
+      .post("http://127.0.0.1:8000/api/products", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((res) => {
+        toast.success("Product successfully added!");
+        navigate("/");
+      })
+      .catch((res) => {
+        for (let key in res.response.data.errors) {
+          toast.error(res.response.data.errors[key][0]);
+        }
+      });
   };
 
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between">
         <h4>Create product</h4>
-        <a href="/" className="btn btn-dark">
+        <Link to="/" className="btn btn-dark">
           Back
-        </a>
+        </Link>
       </div>
       <div className="card border-0 shadow-lg mt-4">
         <form onSubmit={handleSubmit(formSubmit)}>
@@ -51,11 +69,13 @@ const CreateProduct = () => {
                 Images
               </label>
               <input
+                {...register("images[]")}
                 type="file"
                 id="images"
                 className="form-control"
                 multiple
                 onChange={imageHandleChange}
+                accept="image/*"
               />
             </div>
             <div className="mb-3">
@@ -63,10 +83,10 @@ const CreateProduct = () => {
                 Name
               </label>
               <input
-                {...register('name', { required: true })}
+                {...register("name", { required: true })}
                 type="text"
                 id="name"
-                className={`form-control ${errors.name && "is-invalide"}`}
+                className={`form-control ${errors.name && "is-invalid"}`}
                 placeholder="name"
               />
               {errors.name && (
@@ -78,19 +98,32 @@ const CreateProduct = () => {
                 Category
               </label>
               <input
-                {...register('category', { required: true })}
+                {...register("category", { required: true })}
                 type="text"
                 id="category"
-                className={`form-control ${errors.category && "is-invalide"}`}
+                className={`form-control ${errors.category && "is-invalid"}`}
                 placeholder="category"
               />
               {errors.category && (
-                <p className="invalid-feedback">Please enter product category</p>
+                <p className="invalid-feedback">
+                  Please enter product category
+                </p>
               )}
             </div>
-            <button className="btn btn-dark">
-              Submit
-            </button>
+            <div className="mb-3">
+              <label htmlFor="description" className="form-label">
+                Description
+              </label>
+              <textarea
+                {...register("description")}
+                type="text"
+                id="description"
+                className={"form-control"}
+                placeholder="description"
+                cols={3}
+              ></textarea>
+            </div>
+            <button className="btn btn-dark float-end mb-4">Submit</button>
           </div>
         </form>
       </div>
